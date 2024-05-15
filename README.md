@@ -16,3 +16,47 @@ asked to grant access to the repository to the interviewer(s) at the appropriate
 ## TODO
 
 Please update this README with instructions to run and test your software.
+<p align="center">
+ <img src="https://www.edivaldobrito.com.br/wp-content/uploads/2019/04/conheca-as-caracteristicas-da-linguagem-python.jpg" height="250" width="500">  </p>
+ <h1 align="center">C language code</h1>
+<p align="center">
+</p>
+FullStack application using Python language.
+
+
+### Description 
+---
+
+
+---
+
+### Starting
+```bash
+# Clone this project
+$ git clone https://github.com/JenniferFariasRodrigues/python_flask_code.git
+
+# Access using IDE ou through the code
+On the IDE Enviromental choose the open project.
+
+# Choose FormaGeometrica folder in IDE and run the project
+# Put the line on the terminal
+
+# Run code
+
+
+
+```
+
+---
+### Output
+###
+---
+```bash
+
+
+
+```
+
+---
+
+```

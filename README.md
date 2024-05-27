@@ -51,9 +51,8 @@ $ docker-compose up --build
 ###
 
 ---
-
-```bash
-backend
+### Backend
+```
 http://localhost:5000
 
 
@@ -62,9 +61,6 @@ http://localhost:5000
 ---
 
 ### Frontend
-
-http://localhost:3000
-
 ```
-
+http://localhost:3000
 ```

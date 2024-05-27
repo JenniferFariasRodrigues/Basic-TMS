@@ -39,6 +39,8 @@ On the IDE Enviromental choose the open project.
 $ cd tmsProject
 # Run code
 $ docker-compose up --build
+### In the project directory, you can run:
+$ npm start
 
 
 
@@ -47,7 +49,7 @@ $ docker-compose up --build
 ---
 
 ### Output
-
+Runs the app in the development mode.
 ###
 
 ---

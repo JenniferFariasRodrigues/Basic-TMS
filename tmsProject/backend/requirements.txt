@@ -1,0 +1,8 @@
+Flask==3.0.3
+gunicorn==22.0.0
+Flask-SQLAlchemy==2.5.1
+psycopg2-binary==2.9.1
+redis==4.1.0
+pytest==6.2.5
+flask-socketio==5.1.1
+eventlet==0.30.2

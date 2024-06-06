@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask, render_template
 from flask_sqlalchemy import SQLAlchemy
 
 app = Flask(__name__)
@@ -10,3 +10,4 @@ from . import routes
 def create_app():
     db.create_all()
     return app
+

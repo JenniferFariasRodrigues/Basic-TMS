@@ -19,3 +19,4 @@ const App = () => {
 };
 
 export default App;
+//PS: I forgot of implemented the LoadsPage method.

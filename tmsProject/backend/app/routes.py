@@ -3,6 +3,7 @@ from .models import db, ProduceItem, Carrier, Load
 from .tasks import process_csv
 from .utils import validate_carrier
 
+# Create a blueprint to group application routes
 main = Blueprint('main', __name__)
 
 @main.route('/carriers', methods=['GET'])

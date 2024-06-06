@@ -2,6 +2,7 @@ from .models import db, Carrier
 from .utils import validate_carrier
 from rq import get_current_job
 
+# Function to process CSV file content asynchronously
 def process_csv(file_content):
     job = get_current_job()
     lines = file_content.split('\n')

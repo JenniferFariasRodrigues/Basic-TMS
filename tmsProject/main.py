@@ -1,3 +1,4 @@
+# Run the Flask application locally for testing and development.
 from flask import Flask, render_template
 
 app = Flask(__name__)

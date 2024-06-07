@@ -2,19 +2,24 @@ from . import db
 from sqlalchemy.orm import validates # type: ignore
 from sqlalchemy.exc import ValidationError # type: ignore
 
-# This represents a agricultural product/item.
+# This represents a agricultural product/item
+# and defines a many-to-many relationship between ProduceItem and Carrier
 class ProduceItem(db.Model):
     # It defines the columns of the produce_item table
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(64), nullable=False)
     unit = db.Column(db.String(32), nullable=False)
     category = db.Column(db.String(32), nullable=False)
-    #This defines a many-to-many relationship between ProduceItem and Carrier
+    # This defines a many-to-many relationship between ProduceItem and Carrier
     # through the carrier_produce_item associative table.
     carriers = db.relationship('Carrier', secondary='carrier_produce_item', back_populates='produce_items')
+    #Explanation:
+    #secondary='carrier_produce_item': associative table for the many-to-many relationship.
+    # back_populates='produce_items': bidirectional navigation: each Carrier has access to its ProduceItem and vice versa.
 
     
-# This is a many-to-many relationship with ProduceItem code through the carrier_produce_item table
+# This represent a columns table Carrier and the many-to-many relationship with ProduceItem code 
+# through the carrier_produce_item table.
 class Carrier(db.Model):
     # It defines the columns of the carrier table
     id = db.Column(db.Integer, primary_key=True)
@@ -26,6 +31,10 @@ class Carrier(db.Model):
     #Relationship beteween ProduceItem and carrier_produce_item
     produce_items = db.relationship('ProduceItem', secondary='carrier_produce_item', back_populates='carriers')
     #This defines a one-to-many relationship between Carrier and Load.
+    # Explanation:
+    # back_populates='produce_items': bidirectional navigation: each Carrier has access to its ProduceItem and vice versa.
+    # Explanation:
+    # A Carrier can have many Loads. Each Load belongs to a single Carrier.
     loads = db.relationship('Load', back_populates='carrier')    
     # Checks whether the Carrier is busy. A carrier is busy if it has 
     # any cargo with a status other than delivered.
@@ -95,3 +104,36 @@ class Load(db.Model):
         if not are_items_compatible(load_items):
             raise ValidationError("Load items are not compatible")
         return load_items
+
+
+class LoadItem(db.Model):
+    # It define the columns of the loadItem table
+    id = db.Column(db.Integer, primary_key=True)
+    produce_item_id = db.Column(db.Integer, db.ForeignKey('produce_item.id'), nullable=False)
+    quantity = db.Column(db.Integer, nullable=False)
+    # ForeignKeys: table references ProduceItem and Load.
+    load_id = db.Column(db.Integer, db.ForeignKey('load.id'), nullable=False)
+    #This defines a many-to-one relationship between LoadItem and ProduceItem.
+    produce_item = db.relationship('ProduceItem')
+    #This defines a many-to-one relationship between LoadItem and Load.
+    load = db.relationship('Load', back_populates='load_items')
+
+class Crop(db.Model):
+    # It defines the columns of the crop table.
+    id = db.Column(db.Integer, primary_key=True)
+    produce_item_id = db.Column(db.Integer, db.ForeignKey('produce_item.id'), nullable=False)
+    # ForeignKey: this table references ProduceItem and Carrier.
+    carrier_id = db.Column(db.Integer, db.ForeignKey('carrier.id'), nullable=False)
+    quantity = db.Column(db.Integer, nullable=False)
+    # Stores Harvest Date: Track the freshness and expiration of harvested items.
+    # Many agricultural products have a limited shelf life and the harvest date 
+    # is critical for logistics and inventory management.
+    harvest_date = db.Column(db.Date, nullable=False)
+    farmer = db.Column(db.String(100), nullable=False) 
+    location = db.Column(db.String(100), nullable=False)
+    # This defines the many-to-one relationship between Crop and ProduceItem. 
+    # I can access the production item associated with this harvest: ProduceItem=>harvest
+    produce_item = db.relationship('ProduceItem')
+    # This defines the many-to-one relationship between Crop and Carrier. 
+    # I can access the transporter associated with this harvest: carrier=>harvest
+    carrier = db.relationship('Carrier')

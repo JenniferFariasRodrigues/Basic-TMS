@@ -19,7 +19,7 @@ class ProduceItem(db.Model):
     __tablename__ = 'produce_item' # The table name ensures that the tables are produced with these names
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(64), nullable=False)
-    unit = db.Column(db.String(32), nullable=False)
+    unit = db.Column(db.String(32), nullable=False, default='Box')
     category = db.Column(db.String(32), nullable=False)
     carriers = db.relationship('Carrier', secondary='carrier_produce_item', back_populates='produce_items')# This defines a many-to-many relationship between ProduceItem and Carrier through the carrier_produce_item associative table.
     loads = db.relationship('Load', secondary=load_produce_item, back_populates='produce_items')
@@ -44,6 +44,7 @@ class Carrier(db.Model):
     max_load_quantity = db.Column(db.Integer, nullable=False)
     produce_items = db.relationship('ProduceItem', secondary='carrier_produce_item', back_populates='carriers') # Relationship beteween ProduceItem and carrier_produce_item
     loads = db.relationship('Load', back_populates='carrier')# Checks whether the Carrier is busy. A carrier is busy if it has any load with a status other than delivered.A Carrier can have many Loads. Each Load belongs to a single Carrier.
+    
     @property
     def is_busy(self):
         return self.status != 'free'
@@ -72,6 +73,7 @@ class Carrier(db.Model):
 
 # This represents a many-to-many relationship between Carrier and ProduceItem.
 class CarrierProduceItem(db.Model):
+    __tablename__ = 'carrier_produce_item'
     carrier_id = db.Column(db.Integer, db.ForeignKey('carrier.id'), primary_key=True)
     produce_item_id = db.Column(db.Integer, db.ForeignKey('produce_item.id'), primary_key=True)
 
@@ -85,26 +87,26 @@ def are_items_compatible(items):
         ('banana', 'lettuce'),
         ('tomato', 'cucumber'),
         ('potato', 'onion'),
+        ('strawberry', 'onion'),
+        ('blueberries', 'onion'),
         ('melon', None)  
     ]
     # This extracts the production item names from the given item list.
-    item_names = [item.produce_item.name for item in items]
-    #This check the list of items for incompatible pairs. If there is, 
-    # it returns False, indicating that the items are not compatible.
-    for pair in incompatible_pairs:
-        if pair[1] is None and pair[0] in item_names:
+    item_names = [item.name for item in items]     
+    for pair in incompatible_pairs:#This check the list of items for incompatible pairs. 
+        if pair[1] is None and pair[0] in item_names:# If there is,it returns False, indicating that the items are not compatible.
             if len(item_names) > 1:
                 return False
         elif pair[0] in item_names and pair[1] in item_names:
             return False
-
     return True
 class Load(db.Model):
     # It defines the columns of the load table
+    __tablename__ = 'load'
     id = db.Column(db.Integer, primary_key=True)
     customer = db.Column(db.String(64), nullable=False)
-    status = db.Column(db.String(50), default='pending')
-    produce_items = db.relationship('ProduceItem', backref='load', lazy=True)
+    # status = db.Column(db.String(50), default='pending')
+    produce_items = db.relationship('ProduceItem', secondary=load_produce_item, back_populates='loads')
     carrier_id = db.Column(db.Integer, db.ForeignKey('carrier.id'), nullable=True)
     # This defines a many-to-one relationship between Load and Carrier.
     carrier = db.relationship('Carrier', back_populates='loads')
@@ -118,36 +120,49 @@ class Load(db.Model):
     @validates('carrier_id')
     def validate_carrier(self, key, carrier_id):
         carrier = Carrier.query.get(carrier_id)
+        if not carrier:
+            raise ValidationError("Carrier not found.")
         if carrier.is_busy:
-            raise ValidationError("Carrier is busy")
-        if not are_items_compatible(self.load_items):
+            raise ValidationError("The {carrier.name} is busy.")
+        if not carrier.can_carry_all_items(self):
+            raise ValidationError(f"The carrier{carrier.name} cannot carry all of these cargo items!")
+        if not carrier.can_carry_quantity(self):
+            unit = self.load_items[0].produce_item.unit if self.load_items else 'unity'
+            total_quantity_in_load = sum(load_item.quantity for load_item in self.load_items)
+            current_total_quantity = sum(sum(load_item.quantity for load_item in existing_load.load_items)
+                for existing_load in carrier.loads
+            )
+    
+        raise ValidationError(f"The carrier {carrier.name} cannot load more than "
+                            f"{carrier.max_load_quantity} {unit} of cargo items! Current quantity: "
+                            f"{current_total_quantity} {unit}, Attempt to add:"
+                            f" {total_quantity_in_load} {unit}.")
+        
+        if not are_items_compatible([item.produce_item for item in self.load_items]):
             raise ValidationError("Load items are not compatible")
         return carrier_id
 
     # Validation: this validates that the items in the load are compatible with each other.
     # called when load items are added to a Load. It checks whether the items in the load are
     # compatible with each other. If they are not compatible, an exception is thrown.
-    @validates('load_items')
-    def validate_load_items(self, key, load_items):
-        if not are_items_compatible(load_items):
+    # @validates('load_items')
+    def validate_load_items(self):
+        if not are_items_compatible([item.produce_item for item in self.load_items]):
             raise ValidationError("Load items are not compatible")
-        return load_items
-
-
+        
 class LoadItem(db.Model):
     # It define the columns of the loadItem table
     id = db.Column(db.Integer, primary_key=True)
     produce_item_id = db.Column(db.Integer, db.ForeignKey('produce_item.id'), nullable=False)
     quantity = db.Column(db.Integer, nullable=False)
-    # ForeignKeys: table references ProduceItem and Load.
-    load_id = db.Column(db.Integer, db.ForeignKey('load.id'), nullable=False)
-    #This defines a many-to-one relationship between LoadItem and ProduceItem.
-    produce_item = db.relationship('ProduceItem')
-    #This defines a many-to-one relationship between LoadItem and Load.
-    load = db.relationship('Load', back_populates='load_items')
+    load_id = db.Column(db.Integer, db.ForeignKey('load.id'), nullable=False)# ForeignKeys: table references ProduceItem and Load.
+    produce_item = db.relationship('ProduceItem')# This defines a many-to-one relationship between LoadItem and ProduceItem.
+    load = db.relationship('Load', back_populates='load_items')#This defines a many-to-one relationship between LoadItem and Load.
+
 
 class Crop(db.Model):
     # It defines the columns of the crop table.
+    __tablename__ = 'crop'
     id = db.Column(db.Integer, primary_key=True)
     produce_item_id = db.Column(db.Integer, db.ForeignKey('produce_item.id'), nullable=False)
     # ForeignKey: this table references ProduceItem and Carrier.
@@ -165,3 +180,9 @@ class Crop(db.Model):
     # This defines the many-to-one relationship between Crop and Carrier. 
     # I can access the transporter associated with this harvest: carrier=>harvest
     carrier = db.relationship('Carrier')
+    
+    # class Customer(db.Model):# Just to check customer data  
+    #     __tablename__ = 'customer'
+    #     id = db.Column(db.Integer, primary_key=True)
+    #     name = db.Column(db.String(64), nullable=False)
+    #     loads = db.relationship('Load', backref='customer', lazy=True)

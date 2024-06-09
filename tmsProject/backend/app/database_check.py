@@ -8,7 +8,7 @@ def query_loads():
             print(f"Load ID: {load.id}")
             print(f"Cliente: {load.customer}")
             print(f"Carrier: {load.carrier.name if load.carrier else 'None'}")
-            print("Itens de Produção:")
+            print("Production Items:")
             for load_item in load.load_items:
                 print(f" - {load_item.produce_item.name}: {load_item.quantity} {load_item.produce_item.unit}")
             print("-----")

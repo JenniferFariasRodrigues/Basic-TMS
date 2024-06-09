@@ -1,18 +1,28 @@
 from config import db
 from sqlalchemy.orm import validates # type: ignore
-from sqlalchemy.exc import ValidationError # type: ignore
+# from sqlalchemy.exc import ValidationError # type: ignore
+from sqlalchemy.dialects.postgresql import JSON
 
+
+class ValidationError(Exception):
+    pass
+
+# Associative table, used to represent a many-to-many relationship
+load_produce_item = db.Table('load_produce_item',
+    db.Column('load_id', db.Integer, db.ForeignKey('load.id'), primary_key=True),
+    db.Column('produce_item_id', db.Integer, db.ForeignKey('produce_item.id'),
+    primary_key=True))                          
 # This represents a agricultural product/item
 # and defines a many-to-many relationship between ProduceItem and Carrier
 class ProduceItem(db.Model):
     # It defines the columns of the produce_item table
+    __tablename__ = 'produce_item' # The table name ensures that the tables are produced with these names
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(64), nullable=False)
     unit = db.Column(db.String(32), nullable=False)
     category = db.Column(db.String(32), nullable=False)
-    # This defines a many-to-many relationship between ProduceItem and Carrier
-    # through the carrier_produce_item associative table.
-    carriers = db.relationship('Carrier', secondary='carrier_produce_item', back_populates='produce_ite ms')
+    carriers = db.relationship('Carrier', secondary='carrier_produce_item', back_populates='produce_items')# This defines a many-to-many relationship between ProduceItem and Carrier through the carrier_produce_item associative table.
+    loads = db.relationship('Load', secondary=load_produce_item, back_populates='produce_items')
     #Explanation:
     #secondary='carrier_produce_item': associative table for the many-to-many relationship.
     # back_populates='produce_items': bidirectional navigation: each Carrier has access to its ProduceItem and vice versa.
@@ -21,26 +31,44 @@ class ProduceItem(db.Model):
 # This represent a columns table Carrier and the many-to-many relationship with ProduceItem code 
 # through the carrier_produce_item table.
 class Carrier(db.Model):
-    # It defines the columns of the carrier table
+    # It defines the columns of the carrier 
+    __tablename__ = 'carrier'# The table name ensures that the tables are produced with these names
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(64), nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
     phone = db.Column(db.String(20), nullable=False)
     company = db.Column(db.String(64), nullable=False)
     address = db.Column(db.String(128), nullable=False)
-    #Relationship beteween ProduceItem and carrier_produce_item
-    produce_items = db.relationship('ProduceItem', secondary='carrier_produce_item', back_populates='carriers')
-    #This defines a one-to-many relationship between Carrier and Load.
-    # Explanation:
-    # back_populates='produce_items': bidirectional navigation: each Carrier has access to its ProduceItem and vice versa.
-    # Explanation:
-    # A Carrier can have many Loads. Each Load belongs to a single Carrier.
-    loads = db.relationship('Load', back_populates='carrier')    
-    # Checks whether the Carrier is busy. A carrier is busy if it has 
-    # any cargo with a status other than delivered.
+    allowed_items = db.Column(JSON, nullable=True)  # This indicates which products are compatible with the charger
+    status = db.Column(db.String(50), default='free')  # This checks if the charger is free.
+    max_load_quantity = db.Column(db.Integer, nullable=False)
+    produce_items = db.relationship('ProduceItem', secondary='carrier_produce_item', back_populates='carriers') # Relationship beteween ProduceItem and carrier_produce_item
+    loads = db.relationship('Load', back_populates='carrier')# Checks whether the Carrier is busy. A carrier is busy if it has any load with a status other than delivered.A Carrier can have many Loads. Each Load belongs to a single Carrier.
     @property
     def is_busy(self):
-        return any(load.status != 'delivered' for load in self.loads)
+        return self.status != 'free'
+        # return any(load.status != 'delivered' for load in self.loads)
+    def can_carry_all_items(self, load):
+        # Checks if the carrier can load any item
+        if 'any' in self.allowed_items:
+            return are_items_compatible([item.produce_item for item in load.load_items])
+
+        # Checks if all items in the load are allowed
+        for load_item in load.load_items:
+            if load_item.produce_item.name not in self.allowed_items:
+                return False
+
+        # Check item compatibility
+        return are_items_compatible([item.produce_item for item in load.load_items])
+
+    def can_carry_quantity(self, load):
+        total_quantity = sum(
+            sum(load_item.quantity for load_item in existing_load.load_items)
+            for existing_load in self.loads
+        )
+        total_quantity += sum(load_item.quantity for load_item in load.load_items)
+        return total_quantity <= self.max_load_quantity
+
 
 # This represents a many-to-many relationship between Carrier and ProduceItem.
 class CarrierProduceItem(db.Model):

@@ -1,4 +1,4 @@
-from . import db
+from config import db
 from sqlalchemy.orm import validates # type: ignore
 from sqlalchemy.exc import ValidationError # type: ignore
 
@@ -12,7 +12,7 @@ class ProduceItem(db.Model):
     category = db.Column(db.String(32), nullable=False)
     # This defines a many-to-many relationship between ProduceItem and Carrier
     # through the carrier_produce_item associative table.
-    carriers = db.relationship('Carrier', secondary='carrier_produce_item', back_populates='produce_items')
+    carriers = db.relationship('Carrier', secondary='carrier_produce_item', back_populates='produce_ite ms')
     #Explanation:
     #secondary='carrier_produce_item': associative table for the many-to-many relationship.
     # back_populates='produce_items': bidirectional navigation: each Carrier has access to its ProduceItem and vice versa.

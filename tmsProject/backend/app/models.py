@@ -104,7 +104,7 @@ class Load(db.Model):
     # It defines the columns of the load table
     __tablename__ = 'load'
     id = db.Column(db.Integer, primary_key=True)
-    customer = db.Column(db.String(64), nullable=False)
+    customer = db.Column(db.String(64), db.ForeignKey('customer.id'), nullable=False)
     # status = db.Column(db.String(50), default='pending')
     produce_items = db.relationship('ProduceItem', secondary=load_produce_item, back_populates='loads')
     carrier_id = db.Column(db.Integer, db.ForeignKey('carrier.id'), nullable=True)
@@ -181,8 +181,8 @@ class Crop(db.Model):
     # I can access the transporter associated with this harvest: carrier=>harvest
     carrier = db.relationship('Carrier')
     
-    # class Customer(db.Model):# Just to check customer data  
-    #     __tablename__ = 'customer'
-    #     id = db.Column(db.Integer, primary_key=True)
-    #     name = db.Column(db.String(64), nullable=False)
-    #     loads = db.relationship('Load', backref='customer', lazy=True)
+    class Customer(db.Model):# Just to check customer data  
+        __tablename__ = 'customer'
+        id = db.Column(db.Integer, primary_key=True)
+        name = db.Column(db.String(64), nullable=False)
+        loads = db.relationship('Load', backref='customer_obj', lazy=True)

@@ -1,7 +1,7 @@
 from config import db, app
 from models import ProduceItem, Carrier, Load, LoadItem, Crop
-# from transactional import 
 from sqlalchemy.orm import scoped_session, sessionmaker
+from sqlalchemy.exc import IntegrityError
 from datetime import date
 
 # Used to manage transactions
@@ -37,8 +37,8 @@ def insert_data():
 
             # Insert carrier
             carrier1 = Carrier(
-                name='John Smith',
-                email='johnsmitherer@transports343.com.br',
+                name='John Smith cooper',
+                email='j@trans.com.br',
                 phone='+148988991122',
                 company='John Transportes LTDA.',
                 address='Flowers Street, Happy Ranch',
@@ -46,9 +46,9 @@ def insert_data():
                 max_load_quantity=200
             )
             carrier2 = Carrier(
-                name='Mary Cooper',
-                email='maryCooper@transports.com',
-                phone='+233252435146',    
+                name='Mary Cooper Smith',
+                email='marycCooper@trans.com',
+                phone='+233252435147',    
                 company='Mary Transports LTDA.',
                 address='Tree Street, North Ranch',
                 allowed_items=['strawberry', 'blueberries', 'blackberries'],
@@ -56,21 +56,29 @@ def insert_data():
             )
             
             carrier3 = Carrier(
-                name='Steve Jobs',
-                email='steveJobs@transports.com',
-                phone='+3312431489',
+                name='Steve Jobs Smith',
+                email='steve@trans.com',
+                phone='+3312431488',
                 company='Steve Transport LTDA.',
                 address='Avocado street, Happy Ranch',
                 allowed_items=['any'],  # Adding the list of allowed items
                 max_load_quantity=250  # Setting the maximum quantity of items
             )
 
-            session.add(carrier1)
-            session.add(carrier2)
-            session.add(carrier3)
-            session.commit()  # Commit to generate IDs for Carriers
+            # session.add(carrier1)
+            # session.add(carrier2)
+            # session.add(carrier3)
+            # session.commit()  # Commit to generate IDs for Carriers
 
-            # Carrier Insert
+            # verification to avoid duplicate email addresses
+            for carrier in [carrier1, carrier2, carrier3]:
+                try:
+                    session.add(carrier)
+                    session.commit()
+                except IntegrityError:
+                    session.rollback()
+                    print(f"Email address '{carrier.email}' already exists. Omitting carrier insertion.")           
+                    # Carrier Insert
             load1 = Load(customer='Customer A')
             load2 = Load(customer='Customer B')
             load3 = Load(customer='Customer C')

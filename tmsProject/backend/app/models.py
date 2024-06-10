@@ -35,7 +35,7 @@ class Carrier(db.Model):
     __tablename__ = 'carrier'# The table name ensures that the tables are produced with these names
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(64), nullable=False)
-    email = db.Column(db.String(120), unique=True, nullable=False)
+    email = db.Column(db.String(120), nullable=False)
     phone = db.Column(db.String(20), nullable=False)
     company = db.Column(db.String(64), nullable=False)
     address = db.Column(db.String(128), nullable=False)
@@ -125,7 +125,7 @@ class Load(db.Model):
         if carrier.is_busy:
             raise ValidationError("The {carrier.name} is busy.")
         if not carrier.can_carry_all_items(self):
-            raise ValidationError(f"The carrier{carrier.name} cannot carry all of these cargo items!")
+            raise ValidationError(f"The carrier{carrier.name} cannot carry all of these load items!")
         if not carrier.can_carry_quantity(self):
             unit = self.load_items[0].produce_item.unit if self.load_items else 'unity'
             total_quantity_in_load = sum(load_item.quantity for load_item in self.load_items)

@@ -23,10 +23,6 @@ class ProduceItem(db.Model):
     category = db.Column(db.String(32), nullable=False)
     carriers = db.relationship('Carrier', secondary='carrier_produce_item', back_populates='produce_items')# This defines a many-to-many relationship between ProduceItem and Carrier through the carrier_produce_item associative table.
     loads = db.relationship('Load', secondary=load_produce_item, back_populates='produce_items')
-    #Explanation:
-    #secondary='carrier_produce_item': associative table for the many-to-many relationship.
-    # back_populates='produce_items': bidirectional navigation: each Carrier has access to its ProduceItem and vice versa.
-
     
 # This represent a columns table Carrier and the many-to-many relationship with ProduceItem code 
 # through the carrier_produce_item table.
@@ -103,15 +99,13 @@ def are_items_compatible(items):
 class Load(db.Model):
     # It defines the columns of the load table
     __tablename__ = 'load'
-    id = db.Column(db.Integer, primary_key=True)
-    customer = db.Column(db.String(64), db.ForeignKey('customer.id'), nullable=False)
-    # status = db.Column(db.String(50), default='pending')
+    id = db.Column(db.Integer, primary_key=True)   
+    customer = db.Column(db.String(64), nullable=False)
     produce_items = db.relationship('ProduceItem', secondary=load_produce_item, back_populates='loads')
     carrier_id = db.Column(db.Integer, db.ForeignKey('carrier.id'), nullable=True)
-    # This defines a many-to-one relationship between Load and Carrier.
     carrier = db.relationship('Carrier', back_populates='loads')
-    # This defines a one-to-many relationship between Load and LoadItem.
-    load_items = db.relationship('LoadItem', back_populates='load', lazy=True)
+    load_items = db.relationship('LoadItem', back_populates='load', lazy=True)# This defines a one-to-many relationship between Load and LoadItem.
+
 
     #Validation: this validates that the carrier can be assigned to the load.
     # called when a Carrier is assigned to a Load. It checks whether the carrier is busy 
@@ -181,8 +175,8 @@ class Crop(db.Model):
     # I can access the transporter associated with this harvest: carrier=>harvest
     carrier = db.relationship('Carrier')
     
-    class Customer(db.Model):# Just to check customer data  
-        __tablename__ = 'customer'
-        id = db.Column(db.Integer, primary_key=True)
-        name = db.Column(db.String(64), nullable=False)
-        loads = db.relationship('Load', backref='customer_obj', lazy=True)
+    # class Customer(db.Model):# Just to check customer data  
+    #     __tablename__ = 'customer'
+    #     id = db.Column(db.Integer, primary_key=True)
+    #     name = db.Column(db.String(64), nullable=False)
+    #     loads = db.relationship('Load', backref='customer_obj', lazy=True)

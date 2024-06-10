@@ -20,8 +20,6 @@ def insert_data():
         ]
         db.session.add_all(carriers)
         db.session.commit()
-        db.session.add_all(produce_items)
-        db.session.commit()
         print("Data entered successfully.")
 
     except Exception as e:

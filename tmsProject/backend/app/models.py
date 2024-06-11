@@ -35,15 +35,13 @@ class Carrier(db.Model):
     company = db.Column(db.String(64), nullable=False)
     address = db.Column(db.String(128), nullable=False)
     allowed_items = db.Column(JSON, nullable=True)  # This indicates which products are compatible with the charger
-    status = db.Column(db.String(50), default='free')  # This checks if the charger is free.
     max_load_quantity = db.Column(db.Integer, nullable=False)
     produce_items = db.relationship('ProduceItem', secondary='carrier_produce_item', back_populates='carriers') # Relationship beteween ProduceItem and carrier_produce_item
     loads = db.relationship('Load', back_populates='carrier')# Checks whether the Carrier is busy. A carrier is busy if it has any load with a status other than delivered.A Carrier can have many Loads. Each Load belongs to a single Carrier.
     
     @property
     def is_busy(self):
-        return self.status != 'free'
-        # return any(load.status != 'delivered' for load in self.loads)
+        return any(load.status != 'delivered' for load in self.loads)       
     def can_carry_all_items(self, load):
         # Checks if the carrier can load any item
         if 'any' in self.allowed_items:
@@ -95,6 +93,7 @@ def are_items_compatible(items):
         elif pair[0] in item_names and pair[1] in item_names:
             return False
     return True
+
 class Load(db.Model):
     # It defines the columns of the load table
     __tablename__ = 'load'
@@ -104,7 +103,8 @@ class Load(db.Model):
     carrier_id = db.Column(db.Integer, db.ForeignKey('carrier.id'), nullable=True)
     carrier = db.relationship('Carrier', back_populates='loads')
     load_items = db.relationship('LoadItem', back_populates='load', lazy=True)# This defines a one-to-many relationship between Load and LoadItem.
-
+    status = db.Column(db.String(50), default='pending')
+    
 
     #Validation: this validates that the carrier can be assigned to the load.
     # called when a Carrier is assigned to a Load. It checks whether the carrier is busy 
@@ -142,6 +142,26 @@ class Load(db.Model):
         if not are_items_compatible([item.produce_item for item in self.load_items]):
             raise ValidationError("Load items are not compatible")
         
+def test_check_status(self):
+        # Load created and input on a carrier
+        load_created = Load(customer='Cliente D')
+        item_load_created= LoadItem(produce_item=self.strawberry, quantity=5, load=load_created)
+        
+        db.session.add(load_created)
+        db.session.add(item_load_created)
+        db.session.commit()
+
+        load_created.carrier = self.mary
+        db.session.commit()
+
+        # Check if carrier is busy
+        self.assertTrue(self.mary.is_busy)
+
+        load_created.status = 'delivered'
+        db.session.commit()
+
+        # check if carrier is free again
+        self.assertFalse(self.mary.is_busy)
 class LoadItem(db.Model):
     # It define the columns of the loadItem table
     __tablename__ = 'load_item'    

@@ -201,6 +201,27 @@ class TestModels(unittest.TestCase):
         steve.status = 'with load'
         db.session.commit()
         self.assertTrue(steve.is_busy)
+    
+    def test_check_status(self):
+        # Load created and input on a carrier
+        load_created = Load(customer='Cliente D')
+        item_load_created= LoadItem(produce_item=self.strawberry, quantity=5, load=load_created)
+        
+        db.session.add(load_created)
+        db.session.add(item_load_created)
+        db.session.commit()
+
+        load_created.carrier = self.mary
+        db.session.commit()
+
+        # Check if carrier is busy
+        self.assertTrue(self.mary.is_busy)
+
+        load_created.status = 'delivered'
+        db.session.commit()
+
+        # check if carrier is free again
+        self.assertFalse(self.mary.is_busy)
 
 
 if __name__ == '__main__':

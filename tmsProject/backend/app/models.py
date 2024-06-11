@@ -142,26 +142,7 @@ class Load(db.Model):
         if not are_items_compatible([item.produce_item for item in self.load_items]):
             raise ValidationError("Load items are not compatible")
         
-def test_check_status(self):
-        # Load created and input on a carrier
-        load_created = Load(customer='Cliente D')
-        item_load_created= LoadItem(produce_item=self.strawberry, quantity=5, load=load_created)
-        
-        db.session.add(load_created)
-        db.session.add(item_load_created)
-        db.session.commit()
 
-        load_created.carrier = self.mary
-        db.session.commit()
-
-        # Check if carrier is busy
-        self.assertTrue(self.mary.is_busy)
-
-        load_created.status = 'delivered'
-        db.session.commit()
-
-        # check if carrier is free again
-        self.assertFalse(self.mary.is_busy)
 class LoadItem(db.Model):
     # It define the columns of the loadItem table
     __tablename__ = 'load_item'    

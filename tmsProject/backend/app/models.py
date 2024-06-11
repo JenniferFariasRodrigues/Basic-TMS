@@ -12,8 +12,7 @@ load_produce_item = db.Table('load_produce_item',
     db.Column('load_id', db.Integer, db.ForeignKey('load.id'), primary_key=True),
     db.Column('produce_item_id', db.Integer, db.ForeignKey('produce_item.id'),
     primary_key=True))                          
-# This represents a agricultural product/item
-# and defines a many-to-many relationship between ProduceItem and Carrier
+# This represents a agricultural product/item and defines a many-to-many relationship between ProduceItem and Carrier
 class ProduceItem(db.Model):
     # It defines the columns of the produce_item table
     __tablename__ = 'produce_item' # The table name ensures that the tables are produced with these names
@@ -117,24 +116,23 @@ class Load(db.Model):
         if not carrier:
             raise ValidationError("Carrier not found.")
         if carrier.is_busy:
-            raise ValidationError("The {carrier.name} is busy.")
+            raise ValidationError(f"The carrier {carrier.name} is busy.")
         if not carrier.can_carry_all_items(self):
-            raise ValidationError(f"The carrier{carrier.name} cannot carry all of these load items!")
+            raise ValidationError(f"The carrier {carrier.name} cannot carry all of these load items!")
         if not carrier.can_carry_quantity(self):
-            unit = self.load_items[0].produce_item.unit if self.load_items else 'unity'
+            unit = self.load_items[0].produce_item.unit if self.load_items else 'unit'
             total_quantity_in_load = sum(load_item.quantity for load_item in self.load_items)
             current_total_quantity = sum(sum(load_item.quantity for load_item in existing_load.load_items)
                 for existing_load in carrier.loads
             )
-    
-        raise ValidationError(f"The carrier {carrier.name} cannot load more than "
-                            f"{carrier.max_load_quantity} {unit} of cargo items! Current quantity: "
-                            f"{current_total_quantity} {unit}, Attempt to add:"
-                            f" {total_quantity_in_load} {unit}.")
-        
+            raise ValidationError(f"The carrier {carrier.name} cannot load more than "
+                f"{carrier.max_load_quantity} {unit} of load items! Current quantity: "
+                f"{current_total_quantity} {unit}, Attempt to add: "
+                f"{total_quantity_in_load} {unit}.")
         if not are_items_compatible([item.produce_item for item in self.load_items]):
             raise ValidationError("Load items are not compatible")
         return carrier_id
+
 
     # Validation: this validates that the items in the load are compatible with each other.
     # called when load items are added to a Load. It checks whether the items in the load are
@@ -146,6 +144,7 @@ class Load(db.Model):
         
 class LoadItem(db.Model):
     # It define the columns of the loadItem table
+    __tablename__ = 'load_item'    
     id = db.Column(db.Integer, primary_key=True)
     produce_item_id = db.Column(db.Integer, db.ForeignKey('produce_item.id'), nullable=False)
     quantity = db.Column(db.Integer, nullable=False)
@@ -158,25 +157,18 @@ class Crop(db.Model):
     # It defines the columns of the crop table.
     __tablename__ = 'crop'
     id = db.Column(db.Integer, primary_key=True)
-    produce_item_id = db.Column(db.Integer, db.ForeignKey('produce_item.id'), nullable=False)
-    # ForeignKey: this table references ProduceItem and Carrier.
-    carrier_id = db.Column(db.Integer, db.ForeignKey('carrier.id'), nullable=False)
+    produce_item_id = db.Column(db.Integer, db.ForeignKey('produce_item.id'), nullable=False)    
+    carrier_id = db.Column(db.Integer, db.ForeignKey('carrier.id'), nullable=False)# ForeignKey: this table references ProduceItem and Carrier.
     quantity = db.Column(db.Integer, nullable=False)
-    # Stores Harvest Date: Track the freshness and expiration of harvested items.
-    # Many agricultural products have a limited shelf life and the harvest date 
-    # is critical for logistics and inventory management.
-    harvest_date = db.Column(db.Date, nullable=False)
+    harvest_date = db.Column(db.Date, nullable=False) # Stores Harvest Date: Track the freshness and expiration of harvested items.Many agricultural products have a limited shelf life and the harvest date 
     farmer = db.Column(db.String(100), nullable=False) 
     location = db.Column(db.String(100), nullable=False)
-    # This defines the many-to-one relationship between Crop and ProduceItem. 
-    # I can access the production item associated with this harvest: ProduceItem=>harvest
-    produce_item = db.relationship('ProduceItem')
-    # This defines the many-to-one relationship between Crop and Carrier. 
-    # I can access the transporter associated with this harvest: carrier=>harvest
-    carrier = db.relationship('Carrier')
+    produce_item = db.relationship('ProduceItem')# This defines the many-to-one relationship between Crop and ProduceItem.
+    carrier = db.relationship('Carrier') # This defines the many-to-one relationship between Crop and Carrier. 
+
     
     # class Customer(db.Model):# Just to check customer data  
-    #     __tablename__ = 'customer'
+    #     __tablename__ = 'customer'    
     #     id = db.Column(db.Integer, primary_key=True)
     #     name = db.Column(db.String(64), nullable=False)
     #     loads = db.relationship('Load', backref='customer_obj', lazy=True)

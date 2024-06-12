@@ -1,5 +1,7 @@
 from functools import wraps
-from config import db
+# from config import db
+from app import db
+
 
 
 def transactional_session(func):

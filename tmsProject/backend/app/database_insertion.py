@@ -1,4 +1,7 @@
-from config import db, app
+# from config import db, app
+from app import db, app
+
+
 from models import ProduceItem, Carrier, Load, LoadItem, Crop, ValidationError
 from transactional import transactional_session
 from datetime import date

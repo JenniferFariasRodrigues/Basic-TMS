@@ -1,5 +1,7 @@
 from flask import Blueprint, request, jsonify
-from config import db
+# from config import db
+from app import db
+
 from models import ProduceItem
 
 produce_items_bp = Blueprint('produce_items', __name__)

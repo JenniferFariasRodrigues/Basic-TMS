@@ -1,4 +1,6 @@
-from config import db
+# from config import db
+from app import db
+
 from sqlalchemy.orm import validates # type: ignore
 # from sqlalchemy.exc import ValidationError # type: ignore
 from sqlalchemy.dialects.postgresql import JSON

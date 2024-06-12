@@ -1,3 +1,26 @@
+
+import csv
+from app import db
+from app.models import Carrier
+
+def import_carriers_from_csv(data):
+    carriers = []
+    reader = csv.DictReader(data.splitlines())
+    for row in reader:
+        carrier = Carrier(
+            name=row['name'],
+            email=row['email'],
+            phone=row['phone'],
+            company=row['company'],
+            address=row['address'],
+            allowed_items=row['allowed_items'].split(','),  # Assuming the CSV contains a comma-separated list
+            max_load_quantity=int(row['max_load_quantity'])
+        )
+        carriers.append(carrier)
+    db.session.bulk_save_objects(carriers)
+    db.session.commit()
+
+# old code
 # from .models import db, Carrier
 # from .utils import validate_carrier
 # from rq import get_current_job

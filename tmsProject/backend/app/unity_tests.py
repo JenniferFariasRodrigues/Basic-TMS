@@ -1,5 +1,7 @@
 import unittest
-from config import db, app
+# from config import db, app
+from app import db, app
+
 from models import ProduceItem, Carrier, Load, LoadItem, ValidationError
 
 

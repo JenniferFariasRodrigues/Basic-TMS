@@ -6,8 +6,10 @@ from redis import Redis
 from rq import Queue
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///app.db'
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+# app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///app.db'
+# app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config.from_object('app.config.Config')
+
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
 

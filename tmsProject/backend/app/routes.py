@@ -40,6 +40,11 @@ def get_produce_items():
         'unit': item.unit,
         'category': item.category
     } for item in produce_items]), 200  
+    
+# health code status
+@app.route('/api/health', methods=['GET'])
+def health_check():
+    return jsonify({"status": "ok"}), 200
 
 # old code
 # from flask import request, jsonify

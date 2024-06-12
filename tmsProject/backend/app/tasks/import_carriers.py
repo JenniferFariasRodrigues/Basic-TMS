@@ -1,5 +1,7 @@
 import csv
-from config import db
+# from config import db
+from app import db
+
 from models import Carrier
 
 def import_carriers_from_csv(file):

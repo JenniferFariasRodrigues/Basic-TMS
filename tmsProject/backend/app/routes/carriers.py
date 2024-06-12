@@ -1,5 +1,6 @@
 from flask import Blueprint, request, jsonify
-from config import db
+# from config import db
+from app import db
 from models import Carrier
 from tasks.import_carriers import import_carriers_from_csv
 

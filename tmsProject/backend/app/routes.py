@@ -4,19 +4,35 @@ from app.models import Carrier, ProduceItem, Load, LoadItem, Crop
 from app.tasks import import_carriers_from_csv
 
 # GET routes
-@app.route('/carriers', methods=['GET'])
-def get_carriers():
+# @app.route('/api/carriers', methods=['GET'])
+# def get_carriers():
+#     carriers = Carrier.query.all()
+#     return jsonify([{
+#         'id': carrier.id,
+#         'name': carrier.name,
+#         'email': carrier.email,
+#         'phone': carrier.phone,
+#         'company': carrier.company,
+#         'address': carrier.address,
+#         'allowed_items': carrier.allowed_items,
+#         'max_load_quantity': carrier.max_load_quantity
+#     } for carrier in carriers]), 200    
+
+# testing a carrier
+@app.route('/api/carriers', methods=['GET'])
+def list_carriers():
     carriers = Carrier.query.all()
-    return jsonify([{
-        'id': carrier.id,
-        'name': carrier.name,
-        'email': carrier.email,
-        'phone': carrier.phone,
-        'company': carrier.company,
-        'address': carrier.address,
-        'allowed_items': carrier.allowed_items,
-        'max_load_quantity': carrier.max_load_quantity
-    } for carrier in carriers]), 200    
+    results = []
+    for carrier in carriers:
+        results.append({
+            'id': carrier.id,
+            'name': carrier.name,
+            'email': carrier.email,
+            'phone': carrier.phone,
+            'company': carrier.company
+        })
+    return jsonify(results), 200
+
 @app.route('/loads', methods=['GET'])
 def get_loads():
     loads = Load.query.all()

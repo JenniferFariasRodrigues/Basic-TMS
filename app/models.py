@@ -104,6 +104,9 @@ class Load(db.Model):
     carrier = db.relationship('Carrier', back_populates='loads')
     produce_items = db.relationship('ProduceItem', secondary=load_produce_item, back_populates='loads')
     load_items = db.relationship('LoadItem', back_populates='load', lazy=True)
+    # customer_id = db.Column(db.Integer, db.ForeignKey('customer.id'), nullable=False)
+    # customer = db.relationship('Customer', back_populates='loads')
+    # status = db.Column(db.String(20), nullable=False, default='pending')
 
     @validates('carrier_id')
     def validate_carrier(self, key, carrier_id):
@@ -187,3 +190,21 @@ class Crop(db.Model):
             'produce_item': self.produce_item.as_dict(),
             'carrier': self.carrier.as_dict()
         }
+# class Customer(db.Model):
+#     __tablename__ = 'customer'
+#     id = db.Column(db.Integer, primary_key=True)
+#     name = db.Column(db.String(100), nullable=False)
+#     address = db.Column(db.String(200), nullable=False)
+#     email = db.Column(db.String(100), nullable=False, unique=True)
+#     phone = db.Column(db.String(20), nullable=False)
+#     loads = db.relationship('Load', back_populates='customer')
+#
+#     def as_dict(self):
+#         return {
+#             'id': self.id,
+#             'name': self.name,
+#             'address': self.address,
+#             'email': self.email,
+#             'phone': self.phone,
+#             'loads': [load.as_dict() for load in self.loads]
+#         }

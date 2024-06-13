@@ -1,0 +1,4 @@
+customer,produce_items
+Customer A,"['Banana', 'Tomato']"
+Customer B,"['Strawberry', 'Blueberry']"
+Customer C,"['Melon']"

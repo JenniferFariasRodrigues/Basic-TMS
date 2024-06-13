@@ -1,23 +1,7 @@
-# Run the Flask application locally for testing and development.
-from flask import Flask, render_template
+from app import create_app, make_celery
 
-app = Flask(__name__)
-# route -> hashtagtreinamentos.com/
-# função -> o que você quer exibir naquela página
-# template
+app = create_app()
+celery = make_celery(app)
 
-@app.route("/")
-def homepage():
-    return render_template("homepage.html")
-
-@app.route("/contatos")
-def contatos():
-    return render_template("contatos.html")
-
-@app.route("/usuarios/<nome_usuario>")
-def usuarios(nome_usuario):
-    return render_template("usuarios.html", nome_usuario=nome_usuario)
-
-# Passo para colocar o site no ar
 if __name__ == "__main__":
     app.run(debug=True)

@@ -1,51 +1,53 @@
 
+from celery import Celery
+from flask import current_app as app
 import csv
-from app import db
-from app.models import Carrier
+from .models import db, Carrier
 
-def import_carriers_from_csv(data):
-    carriers = []
-    reader = csv.DictReader(data.splitlines())
-    for row in reader:
-        carrier = Carrier(
-            name=row['name'],
-            email=row['email'],
-            phone=row['phone'],
-            company=row['company'],
-            address=row['address'],
-            allowed_items=row['allowed_items'].split(','),  # Assuming the CSV contains a comma-separated list
-            max_load_quantity=int(row['max_load_quantity'])
-        )
-        carriers.append(carrier)
-    db.session.bulk_save_objects(carriers)
+def make_celery(app):
+    celery = Celery(app.import_name, broker=app.config['CELERY_BROKER_URL'])
+    celery.conf.update(app.config)
+    class ContextTask(celery.Task):
+        def __call__(self, *args, **kwargs):
+            with app.app_context():
+                return self.run(*args, **kwargs)
+    celery.Task = ContextTask
+    return celery
+
+celery = make_celery(app)
+
+@celery.task
+def process_csv(data):
+    csv_data = csv.DictReader(data.splitlines())
+    for row in csv_data:
+        carrier = Carrier.query.filter_by(email=row['email']).first()
+        if carrier:
+            for key, value in row.items():
+                setattr(carrier, key, value)
+        else:
+            carrier = Carrier(**row)
+            db.session.add(carrier)
     db.session.commit()
+    return {'status': 'completed'}
 
-# old code
-# from .models import db, Carrier
-# from .utils import validate_carrier
-# from rq import get_current_job
+# import csv
+# from app import db
+# from app.models import Carrier
 
-# # Function to process CSV file content asynchronously
-# def process_csv(file_content):
-#     job = get_current_job()
-#     lines = file_content.split('\n')
-#     for line in lines:
-#         if line.strip():
-#             data = line.split(',')
-#             if validate_carrier(data):
-#                 name, email, phone, company, address = data
-#                 carrier = Carrier.query.filter_by(email=email).first()
-#                 if carrier:
-#                     carrier.name = name
-#                     carrier.phone = phone
-#                     carrier.company = company
-#                     carrier.address = address
-#                 else:
-#                     carrier = Carrier(name=name, email=email, phone=phone, company=company, address=address)
-#                     db.session.add(carrier)
-#             else:
-#                 # Log ou manejar dados inválidos
-#                 pass
+# def import_carriers_from_csv(data):
+#     carriers = []
+#     reader = csv.DictReader(data.splitlines())
+#     for row in reader:
+#         carrier = Carrier(
+#             name=row['name'],
+#             email=row['email'],
+#             phone=row['phone'],
+#             company=row['company'],
+#             address=row['address'],
+#             allowed_items=row['allowed_items'].split(','),  # Assuming the CSV contains a comma-separated list
+#             max_load_quantity=int(row['max_load_quantity'])
+#         )
+#         carriers.append(carrier)
+#     db.session.bulk_save_objects(carriers)
 #     db.session.commit()
-#     job.meta['progress'] = 100
-#     job.save_meta()
+

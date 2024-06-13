@@ -1,10 +1,6 @@
-# from config import db
-from app import db
-
-from sqlalchemy.orm import validates # type: ignore
-# from sqlalchemy.exc import ValidationError # type: ignore
-from sqlalchemy.dialects.postgresql import JSON
-
+from sqlalchemy import JSON
+from . import db
+from sqlalchemy.orm import validates
 
 class ValidationError(Exception):
     pass
@@ -25,6 +21,14 @@ class ProduceItem(db.Model):
     carriers = db.relationship('Carrier', secondary='carrier_produce_item', back_populates='produce_items')# This defines a many-to-many relationship between ProduceItem and Carrier through the carrier_produce_item associative table.
     loads = db.relationship('Load', secondary=load_produce_item, back_populates='produce_items')
     
+    def as_dict(self):
+        return {
+            'id': self.id,
+            'name': self.name,
+            'unit': self.unit,
+            'category': self.category
+        }
+    
 # This represent a columns table Carrier and the many-to-many relationship with ProduceItem code 
 # through the carrier_produce_item table.
 class Carrier(db.Model):
@@ -32,7 +36,7 @@ class Carrier(db.Model):
     __tablename__ = 'carrier'# The table name ensures that the tables are produced with these names
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(64), nullable=False)
-    email = db.Column(db.String(120), nullable=False)
+    email = db.Column(db.String(120),unique=True, nullable=False)
     phone = db.Column(db.String(20), nullable=False)
     company = db.Column(db.String(64), nullable=False)
     address = db.Column(db.String(128), nullable=False)
@@ -64,6 +68,18 @@ class Carrier(db.Model):
         )
         total_quantity += sum(load_item.quantity for load_item in load.load_items)
         return total_quantity <= self.max_load_quantity
+    
+    def as_dict(self):
+        return {
+            'id': self.id,
+            'name': self.name,
+            'email': self.email,
+            'phone': self.phone,
+            'company': self.company,
+            'address': self.address,
+            'allowed_items': self.allowed_items,
+            'max_load_quantity': self.max_load_quantity
+        }
 
 
 # This represents a many-to-many relationship between Carrier and ProduceItem.
@@ -101,11 +117,11 @@ class Load(db.Model):
     __tablename__ = 'load'
     id = db.Column(db.Integer, primary_key=True)   
     customer = db.Column(db.String(64), nullable=False)
-    produce_items = db.relationship('ProduceItem', secondary=load_produce_item, back_populates='loads')
     carrier_id = db.Column(db.Integer, db.ForeignKey('carrier.id'), nullable=True)
     carrier = db.relationship('Carrier', back_populates='loads')
+    produce_items = db.relationship('ProduceItem', secondary=load_produce_item, back_populates='loads')
     load_items = db.relationship('LoadItem', back_populates='load', lazy=True)# This defines a one-to-many relationship between Load and LoadItem.
-    status = db.Column(db.String(50), default='pending')
+    # status = db.Column(db.String(50), default='pending')
     
 
     #Validation: this validates that the carrier can be assigned to the load.
@@ -139,10 +155,18 @@ class Load(db.Model):
     # Validation: this validates that the items in the load are compatible with each other.
     # called when load items are added to a Load. It checks whether the items in the load are
     # compatible with each other. If they are not compatible, an exception is thrown.
-    # @validates('load_items')
     def validate_load_items(self):
         if not are_items_compatible([item.produce_item for item in self.load_items]):
             raise ValidationError("Load items are not compatible")
+        
+    def as_dict(self):
+        return {
+            'id': self.id,
+            'customer': self.customer,
+            'carrier_id': self.carrier_id,
+            'carrier': self.carrier.as_dict() if self.carrier else None,
+            'load_items': [item.as_dict() for item in self.load_items]
+        }
         
 
 class LoadItem(db.Model):
@@ -154,6 +178,15 @@ class LoadItem(db.Model):
     load_id = db.Column(db.Integer, db.ForeignKey('load.id'), nullable=False)# ForeignKeys: table references ProduceItem and Load.
     produce_item = db.relationship('ProduceItem')# This defines a many-to-one relationship between LoadItem and ProduceItem.
     load = db.relationship('Load', back_populates='load_items')#This defines a many-to-one relationship between LoadItem and Load.
+    
+    def as_dict(self):
+        return {
+            'id': self.id,
+            'produce_item_id': self.produce_item_id,
+            'quantity': self.quantity,
+            'load_id': self.load_id,
+            'produce_item': self.produce_item.as_dict()
+        }
 
 
 class Crop(db.Model):
@@ -168,10 +201,16 @@ class Crop(db.Model):
     location = db.Column(db.String(100), nullable=False)
     produce_item = db.relationship('ProduceItem')# This defines the many-to-one relationship between Crop and ProduceItem.
     carrier = db.relationship('Carrier') # This defines the many-to-one relationship between Crop and Carrier. 
-
     
-    # class Customer(db.Model):# Just to check customer data  
-    #     __tablename__ = 'customer'    
-    #     id = db.Column(db.Integer, primary_key=True)
-    #     name = db.Column(db.String(64), nullable=False)
-    #     loads = db.relationship('Load', backref='customer_obj', lazy=True)
+    def as_dict(self):
+        return {
+            'id': self.id,
+            'produce_item_id': self.produce_item_id,
+            'carrier_id': self.carrier_id,
+            'quantity': self.quantity,
+            'harvest_date': self.harvest_date,
+            'farmer': self.farmer,
+            'location': self.location,
+            'produce_item': self.produce_item.as_dict(),
+            'carrier': self.carrier.as_dict()
+        }

@@ -1,22 +1,44 @@
-
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
-from redis import Redis
-from rq import Queue
+from flask_cors import CORS
+from celery import Celery
 
-app = Flask(__name__)
-# app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///app.db'
-# app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config.from_object('app.config.Config')
+db = SQLAlchemy()
 
-db = SQLAlchemy(app)
-migrate = Migrate(app, db)
 
-redis_conn = Redis(host='redis', port=6379)
-task_queue = Queue(connection=redis_conn)
+def create_app():
+    app = Flask(__name__)
+    app.config.from_object('app.config.Config')
 
-from app import routes, models
+    db.init_app(app)
+    CORS(app)
+
+    from .routes import main_bp
+    app.register_blueprint(main_bp)
+
+    return app
+
+
+def make_celery(app):
+    celery = Celery(app.import_name, broker=app.config['CELERY_BROKER_URL'])
+    celery.conf.update(app.config)
+
+    class ContextTask(celery.Task):
+        def __call__(self, *args, **kwargs):
+            with app.app_context():
+                return self.run(*args, **kwargs)
+
+    celery.Task = ContextTask
+    return celery
+
+
+app = create_app()
+celery = make_celery(app)
+
+if __name__ == "__main__":
+    app.run(debug=True)
+
 
 # old code
 # # Trying a simple connection

@@ -1,0 +1,4 @@
+name,email,phone,company,address,max_load_quantity,allowed_items
+John Doe,johndoe@gmail.com,48999334455,JD Transport,123 Main St,50,"['banana', 'tomato']"
+Mary Smith,marysmith@gmail.com,4732224455,MS Transport,456 Elm St,100,"['strawberry', 'blueberry']"
+Steve Rogers,steverogers@gmail.com,5384155544,SR Transport,789 Oak St,150,"['any']"

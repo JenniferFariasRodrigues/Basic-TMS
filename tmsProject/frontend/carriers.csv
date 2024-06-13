@@ -1,4 +1,0 @@
-name,email,phone,company,address,max_load_quantity,allowed_items
-John Doe,johndoe@example.com,1234567890,JD Transport,123 Main St,50,"['banana', 'tomato']"
-Mary Smith,marysmith@example.com,0987654321,MS Transport,456 Elm St,100,"['strawberry', 'blueberry']"
-Steve Rogers,steverogers@example.com,1112223333,SR Transport,789 Oak St,150,"['any']"

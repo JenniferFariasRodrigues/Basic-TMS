@@ -1,7 +1,7 @@
 import unittest
 import requests
 import json
-from app import create_app, db
+from app import create_app, db  # Certifique-se de que o módulo app está no PYTHONPATH
 
 BASE_URL = 'http://localhost:5000'
 def handle_response(response):

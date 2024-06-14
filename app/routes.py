@@ -120,6 +120,7 @@ def create_load():
         return jsonify({"error": "Customer field is required"}), 400
 
     load = Load(customer=data['customer'])
+    # load = Load(customer_id=data['customer_id'], status=data.get('status', 'pending'))
     db.session.add(load)
     db.session.commit()
     return jsonify(load.as_dict()), 201
@@ -142,6 +143,8 @@ def update_load(load_id):
     data = request.get_json()
     load = Load.query.get_or_404(load_id)
     load.customer = data['customer']
+    # load.customer_id = data['customer_id']
+
     load.carrier_id = data.get('carrier_id', None)
     db.session.commit()
     return jsonify({"message": "Load updated successfully"}), 200
@@ -153,3 +156,45 @@ def delete_load(load_id):
     db.session.delete(load)
     db.session.commit()
     return jsonify({"message": "Load deleted successfully"}), 200
+
+# # Customer Routes
+# @main_bp.route('/customers', methods=['POST'])
+# def create_customer():
+#     data = request.get_json()
+#     new_customer = Customer(
+#         name=data['name'],
+#         address=data['address'],
+#         email=data['email'],
+#         phone=data['phone']
+#     )
+#     db.session.add(new_customer)
+#     db.session.commit()
+#     return jsonify({"message": "Customer created successfully"}), 201
+#
+# @main_bp.route('/customers', methods=['GET'])
+# def get_customers():
+#     customers = Customer.query.all()
+#     return jsonify([customer.as_dict() for customer in customers]), 200
+#
+# @main_bp.route('/customers/<int:customer_id>', methods=['GET'])
+# def get_customer(customer_id):
+#     customer = Customer.query.get_or_404(customer_id)
+#     return jsonify(customer.as_dict()), 200
+#
+# @main_bp.route('/customers/<int:customer_id>', methods=['PUT'])
+# def update_customer(customer_id):
+#     data = request.get_json()
+#     customer = Customer.query.get_or_404(customer_id)
+#     customer.name = data['name']
+#     customer.address = data['address']
+#     customer.email = data['email']
+#     customer.phone = data['phone']
+#     db.session.commit()
+#     return jsonify({"message": "Customer updated successfully"}), 200
+#
+# @main_bp.route('/customers/<int:customer_id>', methods=['DELETE'])
+# def delete_customer(customer_id):
+#     customer = Customer.query.get_or_404(customer_id)
+#     db.session.delete(customer)
+#     db.session.commit()
+#     return jsonify({"message": "Customer deleted successfully"}), 200

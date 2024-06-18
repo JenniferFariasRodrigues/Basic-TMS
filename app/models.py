@@ -103,13 +103,13 @@ class Load(db.Model):
     __tablename__ = 'load'
     id = db.Column(db.Integer, primary_key=True)
     customer = db.Column(db.String(64), nullable=False)
+    # customer_id = db.Column(db.Integer, db.ForeignKey('customer.id'), nullable=False)
+    # status = db.Column(db.String(20), nullable=False)
     carrier_id = db.Column(db.Integer, db.ForeignKey('carrier.id'), nullable=True)
     carrier = db.relationship('Carrier', back_populates='loads')
     produce_items = db.relationship('ProduceItem', secondary=load_produce_item, back_populates='loads')
     load_items = db.relationship('LoadItem', back_populates='load', lazy=True)
-    # customer_id = db.Column(db.Integer, db.ForeignKey('customer.id'), nullable=False)
-    # customer = db.relationship('Customer', back_populates='loads')
-    # status = db.Column(db.String(20), nullable=False, default='pending')
+
 
     @validates('carrier_id')
     def validate_carrier(self, key, carrier_id):
@@ -146,6 +146,8 @@ class Load(db.Model):
         return {
             'id': self.id,
             'customer': self.customer,
+            # 'customer_id': self.customer_id,
+            # 'status': self.status,
             'carrier_id': self.carrier_id,
             'carrier': self.carrier.as_dict() if self.carrier else None,
             'load_items': [item.as_dict() for item in self.load_items]

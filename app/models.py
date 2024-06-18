@@ -4,7 +4,7 @@ from sqlalchemy.orm import validates
 class ValidationError(Exception):
     pass
 
-# Tabela associativa, usada para representar uma relação muitos para muitos
+# Associative table, used to represent a many-to-many relationship
 load_produce_item = db.Table('load_produce_item',
                              db.Column('load_id', db.Integer, db.ForeignKey('load.id'), primary_key=True),
                              db.Column('produce_item_id', db.Integer, db.ForeignKey('produce_item.id'),
@@ -72,10 +72,12 @@ class Carrier(db.Model):
             'max_load_quantity': self.max_load_quantity
         }
 
+
 class CarrierProduceItem(db.Model):
     __tablename__ = 'carrier_produce_item'
     carrier_id = db.Column(db.Integer, db.ForeignKey('carrier.id'), primary_key=True)
     produce_item_id = db.Column(db.Integer, db.ForeignKey('produce_item.id'), primary_key=True)
+
 
 def are_items_compatible(items):
     incompatible_pairs = [
@@ -96,6 +98,7 @@ def are_items_compatible(items):
             return False
     return True
 
+
 class Load(db.Model):
     __tablename__ = 'load'
     id = db.Column(db.Integer, primary_key=True)
@@ -112,32 +115,32 @@ class Load(db.Model):
     def validate_carrier(self, key, carrier_id):
         carrier = Carrier.query.get(carrier_id)
         if not carrier:
-            raise ValidationError("Carrier não encontrado.")
+            raise ValidationError("Carrier not found")
         if carrier.is_busy:
-            raise ValidationError(f"O Carregador {carrier.name} está Ocupado!")
+            raise ValidationError(f"Carrier {carrier.name} is busy!")
 
         if not carrier.can_carry_all_items(self):
-            raise ValidationError(f"O Carregador {carrier.name} não pode carregar todos esses itens da carga!")
+            raise ValidationError(f"Carrier {carrier.name} Can't carry all these load items!")
 
         if not carrier.can_carry_quantity(self):
-            unit = self.load_items[0].produce_item.unit if self.load_items else 'unidades'
+            unit = self.load_items[0].produce_item.unit if self.load_items else 'unity'
             total_quantity_in_load = sum(load_item.quantity for load_item in self.load_items)
             current_total_quantity = sum(
                 sum(load_item.quantity for load_item in existing_load.load_items)
                 for existing_load in carrier.loads
             )
-            raise ValidationError(f"O Carregador {carrier.name} não pode carregar mais de "
-                                  f"{carrier.max_load_quantity} {unit} de itens da carga! Quantidade atual: "
-                                  f"{current_total_quantity} {unit}, Tentativa de adicionar:"
+            raise ValidationError(f"Carrier {carrier.name} cannot load more than "
+                                  f"{carrier.max_load_quantity} {unit} load itens! Current quantity: "
+                                  f"{current_total_quantity} {unit}, Attempt to add:"
                                   f" {total_quantity_in_load} {unit}.")
 
         if not are_items_compatible([item.produce_item for item in self.load_items]):
-            raise ValidationError("Os itens da carga não são compatíveis.")
+            raise ValidationError("Load items are not compatible!.")
         return carrier_id
 
     def validate_load_items(self):
         if not are_items_compatible([item.produce_item for item in self.load_items]):
-            raise ValidationError("Os itens da carga não são compatíveis!")
+            raise ValidationError("Load items are not compatible!")
 
     def as_dict(self):
         return {
@@ -147,6 +150,7 @@ class Load(db.Model):
             'carrier': self.carrier.as_dict() if self.carrier else None,
             'load_items': [item.as_dict() for item in self.load_items]
         }
+
 
 class LoadItem(db.Model):
     __tablename__ = 'load_item'
@@ -165,6 +169,7 @@ class LoadItem(db.Model):
             'load_id': self.load_id,
             'produce_item': self.produce_item.as_dict()
         }
+
 
 class Crop(db.Model):
     __tablename__ = 'crop'

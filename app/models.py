@@ -81,13 +81,13 @@ class CarrierProduceItem(db.Model):
 
 def are_items_compatible(items):
     incompatible_pairs = [
-        ('maca', 'broccoli'),
+        ('apple', 'broccoli'),
         ('banana', 'lettuce'),
-        ('tomate', 'cucumber'),
-        ('batata', 'cebola'),
-        ('morango', 'cebola'),
-        ('blueberries', 'cebola'),
-        ('melao', None)
+        ('tomato', 'cucumber'),
+        ('potato', 'onion'),
+        ('strawberry', 'onion'),
+        ('blueberries', 'onion'),
+        ('melon', None)
     ]
     item_names = [item.name for item in items]
     for pair in incompatible_pairs:
@@ -102,13 +102,13 @@ def are_items_compatible(items):
 class Load(db.Model):
     __tablename__ = 'load'
     id = db.Column(db.Integer, primary_key=True)
-    customer = db.Column(db.String(64), nullable=False)
-    # customer_id = db.Column(db.Integer, db.ForeignKey('customer.id'), nullable=False)
-    # status = db.Column(db.String(20), nullable=False)
+    # customer = db.Column(db.String(64), nullable=False)
+    customer_id = db.Column(db.Integer, db.ForeignKey('customer.id'), nullable=False)
+    status = db.Column(db.String(20), nullable=False)
     carrier_id = db.Column(db.Integer, db.ForeignKey('carrier.id'), nullable=True)
     carrier = db.relationship('Carrier', back_populates='loads')
     produce_items = db.relationship('ProduceItem', secondary=load_produce_item, back_populates='loads')
-    load_items = db.relationship('LoadItem', back_populates='load', lazy=True)
+    load_items = db.relationship('LoadItem', back_populates='load')
 
 
     @validates('carrier_id')
@@ -145,12 +145,13 @@ class Load(db.Model):
     def as_dict(self):
         return {
             'id': self.id,
-            'customer': self.customer,
-            # 'customer_id': self.customer_id,
-            # 'status': self.status,
+            # 'customer': self.customer,
+            'customer_id': self.customer_id,
+            'status': self.status,
             'carrier_id': self.carrier_id,
-            'carrier': self.carrier.as_dict() if self.carrier else None,
-            'load_items': [item.as_dict() for item in self.load_items]
+            'produce_items': [item.as_dict() for item in self.produce_items]
+            # 'carrier': self.carrier.as_dict() if self.carrier else None,
+            # 'load_items': [item.as_dict() for item in self.load_items]
         }
 
 
@@ -197,21 +198,18 @@ class Crop(db.Model):
             'produce_item': self.produce_item.as_dict(),
             'carrier': self.carrier.as_dict()
         }
-# class Customer(db.Model):
-#     __tablename__ = 'customer'
-#     id = db.Column(db.Integer, primary_key=True)
-#     name = db.Column(db.String(100), nullable=False)
-#     address = db.Column(db.String(200), nullable=False)
-#     email = db.Column(db.String(100), nullable=False, unique=True)
-#     phone = db.Column(db.String(20), nullable=False)
-#     loads = db.relationship('Load', back_populates='customer')
-#
-#     def as_dict(self):
-#         return {
-#             'id': self.id,
-#             'name': self.name,
-#             'address': self.address,
-#             'email': self.email,
-#             'phone': self.phone,
-#             'loads': [load.as_dict() for load in self.loads]
-#         }
+
+
+class Customer(db.Model):
+    __tablename__ = 'customer'
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False)
+    loads = db.relationship('Load', backref='customer', lazy=True)
+
+    def as_dict(self):
+        return {
+            'id': self.id,
+            'name': self.name,
+            'pending_loads': len([load for load in self.loads if load.status == 'pending']),
+            'in_transit_loads': len([load for load in self.loads if load.status == 'in transit'])
+        }

@@ -54,7 +54,7 @@ class TestProduceItems(unittest.TestCase):
 
     def test_get_produce_item(self):
         self.test_create_produce_item()
-        produce_item_id = 1  # Assumindo que este é o ID do produce item criado
+        produce_item_id = 1  # fixing id example
         url = f"{BASE_URL}/produce_items/{produce_item_id}"
         response = requests.get(url)
         print("Get Produce Item:")
@@ -62,7 +62,7 @@ class TestProduceItems(unittest.TestCase):
 
     def test_update_produce_item(self):
         self.test_create_produce_item()
-        produce_item_id = 1  # Assumindo que este é o ID do produce item criado
+        produce_item_id = 1  # fixing id example
         url = f"{BASE_URL}/produce_items/{produce_item_id}"
         payload = {
             'name': 'Banana Updated',
@@ -75,7 +75,7 @@ class TestProduceItems(unittest.TestCase):
 
     def test_delete_produce_item(self):
         self.test_create_produce_item()
-        produce_item_id = 1  # Assumindo que este é o ID do produce item criado
+        produce_item_id = 1  # fixing id example
         url = f"{BASE_URL}/produce_items/{produce_item_id}"
         response = requests.delete(url)
         print("Delete Produce Item:")

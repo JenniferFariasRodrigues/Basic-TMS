@@ -1,4 +1,3 @@
-customer,produce_items
-Customer A,"['Banana', 'Tomato']"
-Customer B,"['Strawberry', 'Blueberry']"
-Customer C,"['Melon']"
+id,customer_id,status,carrier_id
+1,1,pending,1
+2,2,delivered,2

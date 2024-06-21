@@ -10,7 +10,7 @@ def create_load():
     if not data or not all(key in data for key in ['status', 'customer_id']):
         return jsonify({'message': 'Invalid input'}), 400
     try:
-        load = Load.create_load(status=data['status'], customer_id=data['customer_id'])
+        load = Load.    create_load(status=data['status'], customer_id=data['customer_id'])
         return jsonify({'message': 'Load created successfully', 'load': load.id}), 201
     except ValidationError as e:
         return jsonify({'message': str(e)}), 400

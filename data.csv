@@ -1,0 +1,27 @@
+type,name,email,phone,company,address,max_load_quantity,allowed_items,unit,category,customer_id,status,carrier_id,produce_item_id,quantity
+    customer,Customer Arnold,,,,,,,,,,,,
+    customer,Customer Bernadett,,,,,,,,,,,,
+    customer,Customer Kidney,,,,,,,,,,,,
+    customer,Customer Diane,,,,,,,,,,,,
+    customer,Customer Oprah,,,,,,,,,,,,
+    carrier,Carrier A,JohnA@email.com,5334567890,Company A, Street A,10,"Apple,Banana",,,,,
+    carrier,Carrier B,MaryB@email.com,48984665588,Company B,Street B,20,"Tomato,Cucumber",,,,,
+    carrier,Carrier C,FrederickC@email.com,1122334455,Company C,Street C,15,"Apple,Tomato",,,,,
+    carrier,Carrier D,Susan@email.com,4133445566,Company D,Street D,25,"Banana,Cucumber",,,,,
+    carrier,Carrier E,MohmadeE@email.com,1244556677,Company E,Street E,30,"Apple,Cucumber",,,,,
+    produce_item,Apple,,,,,kg,Fruit,,,,
+    produce_item,Banana,,,,,kg,Fruit,,,,
+    produce_item,Tomato,,,,,kg,Vegetable,,,,
+    produce_item,Cucumber,,,,,kg,Vegetable,,,,
+    produce_item,Orange,,,,,kg,Fruit,,,,
+    load,,,,,,,1,pending,1,,,,
+    load,,,,,,,2,in transit,2,,,,
+    load,,,,,,,3,pending,3,,,,
+    load,,,,,,,4,in transit,4,,,,
+    load,,,,,,,5,pending,5,,,,
+    load_item,,,,,,,,,,1,1,1,5
+    load_item,,,,,,,,,,2,1,2,10
+    load_item,,,,,,,,,,3,2,3,7
+    load_item,,,,,,,,,,4,2,4,4
+    load_item,,,,,,,,,,5,3,1,6
+    load_item,,,,,,,,,,5,3,4,8

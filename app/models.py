@@ -4,12 +4,12 @@ from sqlalchemy.orm import validates
 class ValidationError(Exception):
     pass
 
-# Associative table, used to represent a many-to-many relationship
+# Associative table => many-to-many relationship
 load_produce_item = db.Table('load_produce_item',
-                             db.Column('load_id', db.Integer, db.ForeignKey('load.id'), primary_key=True),
-                             db.Column('produce_item_id', db.Integer, db.ForeignKey('produce_item.id'),
-                                       primary_key=True)
-                             )
+                            db.Column('load_id', db.Integer, db.ForeignKey('load.id'), primary_key=True),
+                            db.Column('produce_item_id', db.Integer, db.ForeignKey('produce_item.id'), primary_key=True)
+                            )
+
 class ProduceItem(db.Model):
     __tablename__ = 'produce_item'
     id = db.Column(db.Integer, primary_key=True)
@@ -72,16 +72,14 @@ class Carrier(db.Model):
             'max_load_quantity': self.max_load_quantity
         }
 
-
 class CarrierProduceItem(db.Model):
     __tablename__ = 'carrier_produce_item'
     carrier_id = db.Column(db.Integer, db.ForeignKey('carrier.id'), primary_key=True)
     produce_item_id = db.Column(db.Integer, db.ForeignKey('produce_item.id'), primary_key=True)
 
-
 def are_items_compatible(items):
     incompatible_pairs = [
-        ('apple', 'broccoli'),
+        ('stretcher', 'broccoli'),
         ('banana', 'lettuce'),
         ('tomato', 'cucumber'),
         ('potato', 'onion'),
@@ -98,11 +96,9 @@ def are_items_compatible(items):
             return False
     return True
 
-
 class Load(db.Model):
     __tablename__ = 'load'
     id = db.Column(db.Integer, primary_key=True)
-    # customer = db.Column(db.String(64), nullable=False)
     customer_id = db.Column(db.Integer, db.ForeignKey('customer.id'), nullable=False)
     status = db.Column(db.String(20), nullable=False)
     carrier_id = db.Column(db.Integer, db.ForeignKey('carrier.id'), nullable=True)
@@ -110,50 +106,45 @@ class Load(db.Model):
     produce_items = db.relationship('ProduceItem', secondary=load_produce_item, back_populates='loads')
     load_items = db.relationship('LoadItem', back_populates='load')
 
-
     @validates('carrier_id')
     def validate_carrier(self, key, carrier_id):
         carrier = Carrier.query.get(carrier_id)
         if not carrier:
-            raise ValidationError("Carrier not found")
+            raise ValidationError("Carrier not found.")
         if carrier.is_busy:
-            raise ValidationError(f"Carrier {carrier.name} is busy!")
+            raise ValidationError(f"Carrier {carrier.name} busy.")
 
         if not carrier.can_carry_all_items(self):
-            raise ValidationError(f"Carrier {carrier.name} Can't carry all these load items!")
+            raise ValidationError(f"Carrier  {carrier.name} Can't carry all these load items!")
 
         if not carrier.can_carry_quantity(self):
-            unit = self.load_items[0].produce_item.unit if self.load_items else 'unity'
+            unit = self.load_items[0].produce_item.unit if self.load_items else 'units'
             total_quantity_in_load = sum(load_item.quantity for load_item in self.load_items)
             current_total_quantity = sum(
                 sum(load_item.quantity for load_item in existing_load.load_items)
                 for existing_load in carrier.loads
             )
             raise ValidationError(f"Carrier {carrier.name} cannot load more than "
-                                  f"{carrier.max_load_quantity} {unit} load itens! Current quantity: "
-                                  f"{current_total_quantity} {unit}, Attempt to add:"
-                                  f" {total_quantity_in_load} {unit}.")
+                                f"{carrier.max_load_quantity} {unit} of load items! Current quantity: "
+                                f"{current_total_quantity} {unit}, Attempt to add:"
+                                f" {total_quantity_in_load} {unit}.")
 
         if not are_items_compatible([item.produce_item for item in self.load_items]):
-            raise ValidationError("Load items are not compatible!.")
+            raise ValidationError("Load items are not compatible.")
         return carrier_id
 
     def validate_load_items(self):
         if not are_items_compatible([item.produce_item for item in self.load_items]):
-            raise ValidationError("Load items are not compatible!")
+            raise ValidationError("load items are not compatible.")
 
     def as_dict(self):
         return {
             'id': self.id,
-            # 'customer': self.customer,
             'customer_id': self.customer_id,
             'status': self.status,
             'carrier_id': self.carrier_id,
             'produce_items': [item.as_dict() for item in self.produce_items]
-            # 'carrier': self.carrier.as_dict() if self.carrier else None,
-            # 'load_items': [item.as_dict() for item in self.load_items]
         }
-
 
 class LoadItem(db.Model):
     __tablename__ = 'load_item'
@@ -172,7 +163,6 @@ class LoadItem(db.Model):
             'load_id': self.load_id,
             'produce_item': self.produce_item.as_dict()
         }
-
 
 class Crop(db.Model):
     __tablename__ = 'crop'
@@ -198,7 +188,6 @@ class Crop(db.Model):
             'produce_item': self.produce_item.as_dict(),
             'carrier': self.carrier.as_dict()
         }
-
 
 class Customer(db.Model):
     __tablename__ = 'customer'
